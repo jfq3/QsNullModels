@@ -1,0 +1,105 @@
+---
+title: "Beta Null Deviations"
+author: "John Quensen"
+date: "February 4, 2017"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Beta Null Deviations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Make a small community matrix of counts to use as an example. Species are in columns and samples are in rows.  
+
+```{r}
+suppressMessages(library(vegan))
+data("dune")
+comm <- dune
+comm <- comm[1:5, ]
+comm <- comm[ , colSums(comm)>0]
+comm <- comm[ , 1:8]
+comm
+```
+
+Individuals of each species are shuffled among samples by method "`c0_ind`." One way of generating a series of randomized communities by this method is to first define the null model with `nullmodel` and then replicate it a number of times with `simulate` as in the commands:  
+
+```{r}
+x1 <- nullmodel(comm, "c0_ind")
+x2 <- simulate(x1, nsim = 999)
+x2
+```
+
+The object `x2` contains 999 randomized matrices. In order to compare with the original `comm`, the first randomized matrix can be displayed as:  
+
+```{r}
+x2[ , , 1]
+```
+
+The column sums of `comm` and each of the randomized matrices are the same. If we consider each row as comprising a patch in a metacommunitiy, then the randomization procedure maintians the number of individuals in each species in the metacommunity.  
+
+```{r}
+colSums(comm)
+colSums(x2[ , , 1])
+```
+
+Consequently, the total number of individuals and the number of non-empty species ($\gamma$-diversity) are held constant.  
+
+```{r}
+sum(comm)
+sum(x2[ , , 1])
+
+sum(colSums(comm)>0)
+sum(colSums(x2[ , , 1])>0)
+```
+
+To check that there are no empty species in any of the replications:  
+
+```{r}
+all(apply(x2, 3, colSums)>0)
+```
+
+But the number of individuals per sample ($\alpha$-diversity) is not held constant between replicates.  
+
+```{r}
+rowSums(comm)
+rowSums(x2[ , , 1])
+```
+
+Null models are sometimes used to generate expected $\beta$-diversites if $\alpha$- and $\gamma$-diversities are held constant on replication, but that is not the case here.  
+
+```{r}
+bray.obs <- mean(vegdist(comm, "bray"))
+bray.nulls <- apply(x2, 3, vegdist, "bray")
+bray.exptd <- mean(bray.nulls)
+bray.expt.sd <- sd(bray.nulls)
+ses <- (bray.obs - bray.exptd)/bray.expt.sd
+bray.obs
+bray.exptd
+bray.expt.sd
+ses
+```
+
+Plot the distribution of expected mean bray distances. Place the observed mean bray in that distribution.  
+
+```{r}
+hist(bray.nulls, main = "Bray-nulls Distribution")
+abline(v = bray.obs, col = "red")
+# Find the probablility that the observed mean bray distance
+# is not significantly different from the expected mean bray distance.
+rank.1 <- rank(c(bray.obs, bray.nulls))[1]
+p.val <- rank.1/(length(bray.nulls)+1)
+p.val
+```
+
+Compare mean observed Bray distance to mean null Bray distance using `oecosim`.  
+
+```{r}
+mean.bray <- function(x) mean(vegdist(x, "bray"))
+rslt <- oecosimu(comm, mean.bray, method = "c0_ind", nsimul = 999)
+rslt
+```
+

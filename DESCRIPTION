@@ -10,3 +10,7 @@ Description: Provides randomization functions from EcoSimR, means of reformattin
 License: GPL-2
 RoxygenNote: 6.1.1
 Encoding: UTF-8
+Suggests:
+  knitr,
+  rmarkdown
+VignetteBuilder: knitr
