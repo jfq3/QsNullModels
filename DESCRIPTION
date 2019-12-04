@@ -5,7 +5,8 @@ Version: 1.0
 Date: 2014-12-11
 Author: John Quensen
 Maintainer: John Quensen <quensenj@msu.edut>
-Depends: R (>= 3.1.2), abind, ape, picante, nlme, vegan
+Depends: R (>= 3.5.0), picante, vegan
 Description: Provides randomization functions from EcoSimR, means of reformatting oecosimu output, and functions for calculating stochasticity.
 License: GPL-2
 RoxygenNote: 6.1.1
+Encoding: UTF-8
